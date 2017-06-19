@@ -1,7 +1,8 @@
 import cv2
-import numpy
+import numpy as np 
 import math
 from enum import Enum
+import time
 
 class PingPongBall:
     """
@@ -136,8 +137,56 @@ class PingPongBall:
 
 ping = PingPongBall()
 
-image = cv2.imread("C:\\Users\\fiona\\Desktop\\boat project\\imagefolder\\Ping left.png", 1)
+image = cv2.imread("C:\\Users\\fiona\\Desktop\\boat project\\imagefolder\\ping middle.png", 1)
+cam = cv2.VideoCapture(0) 
+
+
 #print("hello world")
 #cv2.imshow("image", image)
-cv2.imshow("image", image)
-print(ping.process(image))
+#cv2.imshow("image", image)
+
+def mean(numbers):
+    return float(sum(numbers)) / max(len(numbers), 1)
+
+def is_left(img):
+    WIDTH, HEIGHT, channel = img.shape
+    #print(WIDTH)
+    contours = ping.process(img)
+    middle = WIDTH / 2
+    #print (middle)
+    if len(contours) == 0:
+        return ("can't find ball")
+    mas_area = 0
+    best_contour= 0
+    
+    for i in contours:
+        area = cv2.contourArea(i)
+        if area > mas_area:
+            mas_area = area
+            best_contour= i
+        #min_x = min(
+    
+    lst = []
+    for i in best_contour:
+        #print(i[0][0])
+        lst.append(i[0][0] - middle)
+        #print(i[0])
+    average = (sum(lst) / len(lst))
+    
+    return average
+
+#print(is_left(image))
+for i in range(10000):
+    ret,frame = cam.read()
+    print(is_left(frame))
+##    cv2.imshow("frame",frame)
+##    if cv2.waitKey(1) & 0xFF == ord('q'):
+##        break
+    time.sleep(0.5)
+    
+
+
+
+
+
+
