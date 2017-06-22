@@ -160,7 +160,7 @@ OBJECT_WIDTH = 0
 
 
 
-# returns a value between -1 and 1, negitive right positive =  left
+# returns a value between -1 and 1, negitive means right, positive =  left
 def is_left(img):
     HEIGHT, WIDTH, channel = img.shape
     contours = ping.process(img)
