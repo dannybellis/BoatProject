@@ -158,9 +158,6 @@ class PingPongBall:
         return output
 
 
-
-
-
 # returns a value between -1 and 1, negitive means right, positive =  left
 def is_left(img):
     HEIGHT, WIDTH, channel = img.shape
