@@ -1,9 +1,10 @@
+#Written by Fiona Shyne and London Lowmanstone
+
 import cv2
 import numpy as np 
 import math
 from enum import Enum
 import time
-
 
 
 class PingPongBall:
@@ -140,13 +141,8 @@ class PingPongBall:
 # variables 
 ping = PingPongBall()
 cam = cv2.VideoCapture(0) 
-image = cv2.imread("C:\\Users\\fiona\\Desktop\\boat project\\imagefolder\\ping middle.png", 1)
 
-
-
-
-
-# returns a value between -1 and 1, -1 = right 1 = left
+# returns a value between -1 and 1, -1 = right, 1 = left
 def is_left(img):
     HEIGHT, WIDTH, channel = img.shape
     print(WIDTH)
