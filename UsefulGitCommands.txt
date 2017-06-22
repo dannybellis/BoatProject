@@ -1,0 +1,4 @@
+status: prints out what files you have yet to commit
+checkout <branch>: switches over to that branch
+pull: fetches the data for the master branch and updates it
+merge: merges two branches (automatically, or you may have to merge by hand)
