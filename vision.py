@@ -189,42 +189,41 @@ def motor_turn(value):
     global MAX_ANGLE
     if value > 0.1:
         angle = value * MAX_ANGLE
-        print("motor turns " + str(angle) + " to the right")
+        print("motor turns {} to the right".format(angle))
     elif value < -0.1:
         angle = value * -MAX_ANGLE
-        print("motor turns " + str(angle) + " to the left")
+        print("motor turns {} to the left".format(angle))
     else:
         print("Stay center")
-              
-
-
-# using webcam print the result of is_left to determine wether the boat should go left or right and how much
-for i in range(100):
-    #find the frame of the webcam and find the is_left value
-    ret,frame = cam.read()
-    value = is_left(frame)
-    print(value)
-    # if it finds the ball turn the motor
-    if not value == "can't find ball":
-        motor_turn(value)
-
-    #put a green outline for the contours of the ball
-    contours = ping.process(frame)
-    middle = 480 / 2
-    if not len(contours) == 0:
-        mas_area = 0
-        best_contour= 0
-        for i in contours:
-            area = cv2.contourArea(i)
-            if area > mas_area:
-                mas_area = area
-                best_contour= i
-        for i in best_contour:
-            frame[i[0][1], i[0][0]] = [0,255,0]
-    # display the frame     
-    cv2.imshow("frame",frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
         
-    time.sleep(0.5)
-    
+#make sure that the program is only run if the file is being run, not just imported
+if __name__ == "__main__":
+    # using webcam print the result of is_left to determine wether the boat should go left or right and how much
+    for i in range(100):
+        #find the frame of the webcam and find the is_left value
+        ret,frame = cam.read()
+        value = is_left(frame)
+        print(value)
+        # if it finds the ball turn the motor
+        if not value == "can't find ball":
+            motor_turn(value)
+        
+        ''' #draws what it sees
+        #put a green outline for the contours of the ball
+        contours = ping.process(frame)
+        middle = 480 / 2
+        if not len(contours) == 0:
+            mas_area = 0
+            best_contour= 0
+            for i in contours:
+                area = cv2.contourArea(i)
+                if area > mas_area:
+                    mas_area = area
+                    best_contour= i
+            for i in best_contour:
+                frame[i[0][1], i[0][0]] = [0,255,0]
+        # display the frame     
+        cv2.imshow("frame",frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        '''
