@@ -205,7 +205,7 @@ if __name__ == "__main__":
         value = is_left(frame)
         print(value)
         # if it finds the ball turn the motor
-        if not value == "can't find ball":
+        if value != "can't find ball":
             motor_turn(value)
         
         ''' #draws what it sees
