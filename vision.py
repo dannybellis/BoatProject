@@ -259,7 +259,9 @@ if __name__ == "__main__":
         value = is_left(frame)
         print(value)
         # if it finds the ball turn the motor
-        if value != "can't find ball":
+        if value == "can't find ball":
+            pass
+        else:
             motor_turn(value)
         
         ''' #draws what it sees
@@ -281,3 +283,10 @@ if __name__ == "__main__":
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         '''
+
+
+
+
+
+
+
