@@ -6,7 +6,10 @@ import math
 from enum import Enum
 import time
 
-
+# variables
+MAX_ANGLE = 40
+FOCAL_LENGTH = 0
+OBJECT_WIDTH = 0
 
 #prints time of section of code
 class Timer:
@@ -149,19 +152,9 @@ class PingPongBall:
             output.append(contour)
         return output
 
-# variables 
-ping = PingPongBall()
-cam = cv2.VideoCapture(0) 
-image = cv2.imread("C:\\Users\\fiona\\Desktop\\boat project\\imagefolder\\ping middle.png", 1)
-MAX_ANGLE = 40
-FOCAL_LENGTH = 0
-OBJECT_WIDTH = 0
-
-
-
-
 # returns a value between -1 and 1, negitive means right, positive =  left
 def is_left(img):
+    global HEIGHT, WIDTH
     HEIGHT, WIDTH, channel = img.shape
     contours = ping.process(img)
     middle = WIDTH / 2
@@ -190,6 +183,7 @@ def is_left(img):
     
     return average / middle
 
+#TODO finish
 # turns the motor based on the value is_left returns 
 def motor_turn(value):
     global MAX_ANGLE
@@ -201,6 +195,13 @@ def motor_turn(value):
         print("motor turns " + str(angle) + " to the left")
     else:
         print("Stay center")
+     
+    command = None   
+    if not(command is None):
+        print("running the following command {}".format(command))
+    
+    
+#TODO will not work
 #returns the distance between an object and the camera        
 def find_distance(focal_length, real_width, contours):
     lst = []
@@ -211,47 +212,11 @@ def find_distance(focal_length, real_width, contours):
     px_width = max_lst - min_lst
     return (real_width * focal_length) / px_width
     
-              
-
-
 # using webcam print the result of is_left to determine wether the boat should go left or right and how much
-for i in range(100):
-    #find the frame of the webcam and find the is_left value
-    ret,frame = cam.read()
-    value = is_left(frame)
-    print(value)
-    
-    # if it finds the ball turn the motor
-    if  value == "can't find ball":
-        pass
-    else: 
-        motor_turn(value)
-
-    #put a green outline for the contours of the ball
-    contours = ping.process(frame)
-    middle = 480 / 2
-    if not len(contours) == 0:
-        mas_area = 0
-        best_contour= 0
-        for i in contours:
-            area = cv2.contourArea(i)
-            if area > mas_area:
-                mas_area = area
-                best_contour= i
-        for i in best_contour:
-            frame[i[0][1], i[0][0]] = [0,255,0]
-            
-    #find distance to ball
-    distance = find_distance(FOCAL_LENGTH, OBJECT_WIDTH, best_contour)
-    print(distance) 
-            
-    # display the frame     
-    cv2.imshow("frame",frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-        
-#make sure that the program is only run if the file is being run, not just imported
 if __name__ == "__main__":
+    ping = PingPongBall()
+    cam = cv2.VideoCapture(0) 
+    
     # using webcam print the result of is_left to determine wether the boat should go left or right and how much
     for i in range(100):
         #find the frame of the webcam and find the is_left value
@@ -263,6 +228,7 @@ if __name__ == "__main__":
             pass
         else:
             motor_turn(value)
+        
         
         ''' #draws what it sees
         #put a green outline for the contours of the ball
@@ -278,6 +244,11 @@ if __name__ == "__main__":
                     best_contour= i
             for i in best_contour:
                 frame[i[0][1], i[0][0]] = [0,255,0]
+                
+        #find distance to ball
+        distance = find_distance(FOCAL_LENGTH, OBJECT_WIDTH, best_contour)
+        print(distance) 
+        
         # display the frame     
         cv2.imshow("frame",frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
