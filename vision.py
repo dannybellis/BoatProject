@@ -7,8 +7,7 @@ import math
 from enum import Enum
 import time
 
-#globals
-cam = cv2.VideoCapture(0) 
+#variables
 MAX_ANGLE = 40
 FOCAL_LENGTH = 0
 OBJECT_WIDTH = 0
@@ -161,7 +160,7 @@ class PingPongBall:
 
 
 
-ping = PingPongBall()
+
 # returns a value between -1 and 1, negitive means right, positive =  left
 def is_left(img):
     HEIGHT, WIDTH, channel = img.shape
@@ -224,6 +223,8 @@ def find_distance(focal_length, real_width, contours):
                      
 #make sure that the program is only run if the file is being run, not just imported
 if __name__ == "__main__":
+    cam = cv2.VideoCapture(0)
+    ping = PingPongBall()
     
     # using webcam print the result of is_left to determine wether the boat should go left or right and how much
     for i in range(100):
@@ -273,9 +274,3 @@ if __name__ == "__main__":
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         '''
-
-
-
-
-
-
