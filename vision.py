@@ -9,8 +9,13 @@ import time
 
 #variables
 MAX_ANGLE = 40
-FOCAL_LENGTH = 0
-OBJECT_WIDTH = 0
+FOCAL_LENGTH = 35 #mm 
+OBJECT_WIDTH = 40 #mm
+VADER_DISTANCE = 100 #distance from ball to relese the convader belt
+VADER_GO = 20 #distance from ball to turn on the vader
+VADER_OFF = 0 #distance from ball to turn vader off
+MAX_THROTTLE = 100 # the highest throttle level
+MIN_THROTTLE = 0 #the lowest throttle level
 
 #prop is short for proportion
 #prop ranges from -1 to 1
@@ -30,7 +35,10 @@ class Timer:
     def __exit__(self,*excs):
         print("{} Time:{}".format(self.name, time.time() - self.start))
 
-
+class Vader:
+    def __init__(self):
+        self.lowered = False
+        self.on = False 
         
 #returns a list of the contours of the ball  
 class PingPongBall:
@@ -196,17 +204,38 @@ def is_left(img):
 
 #TODO finish
 # turns the motor based on the value is_left returns 
-def motor_turn(value):
-    global MAX_ANGLE
+def motor_turn(value, distance, vader):
+    global MAX_ANGLE, VADER_DISTANCE, VADER_GO, VADER_OFF, MAX_THROTTLE
+    angle = value * MAX_ANGLE
     if value > 0.1:
-        angle = value * MAX_ANGLE
         print("motor turns " + str(angle) + " to the right")
     elif value < -0.1:
-        angle = value * -MAX_ANGLE
         print("motor turns " + str(angle) + " to the left")
     else:
         print("Stay center")
 
+    if distance > VADER_DISTANCE:
+        print("setting throttle to {}" .format(MAX_THROTTLE))
+    elif distance <VADER_DISTANCE and distance > VADER_GO:
+        print("setting throttle to {}" .format(MAX_THROTTLE/2))
+        if vader.lowered == False: 
+            vader.lowered = True
+            print("Lowering Vader")
+    elif distance < VADER_GO and distance > VADER_OFF:
+        print("Setting throttle to {}" .format(MAX_THROTTLE/4))
+        if vader.on == False:
+            vader.on = True
+            print("turning vader on")
+    elif distance <= VADER_OFF:
+        print("Setttinr throttle to{}" .format(0))
+        if vader.on == True: 
+            vader.on = False
+            print("Turning Vader off")
+        if vader.lowered == True: 
+            vader.lowered = False
+            print("raising vader") 
+    
+    #TODO make this a list of commands to run
     command = None   
     if not(command is None):
         print("running the following command {}".format(command))
@@ -215,12 +244,18 @@ def motor_turn(value):
      
 #returns the distance between an object and the camera        
 def find_distance(focal_length, real_width, contours):
-    lst = []
-    for i in contours:
-        lst.append(i[0][0])
-    max_lst = max(lst)
-    min_lst = min(lst)
-    px_width = max_lst - min_lst
+
+##    lst = []
+##    for i in contours:
+##        lst.append(i[0][0])
+##    max_lst = max(lst)
+##    min_lst = min(lst)
+##    px_width = max_lst - min_lst
+    if len(contours) == 0:
+        return 0 
+    (x,y), radius = cv2.minEnclosingCircle(contours)
+    px_width = radius * 2
+    print("px_Width:{}" .format(px_width))
     return (real_width * focal_length) / px_width
 
     
@@ -229,6 +264,7 @@ def find_distance(focal_length, real_width, contours):
 if __name__ == "__main__":
     cam = cv2.VideoCapture(0)
     ping = PingPongBall()
+    vader = Vader()
     
     # using webcam print the result of is_left to determine wether the boat should go left or right and how much
     for i in range(100):
@@ -236,14 +272,8 @@ if __name__ == "__main__":
         #find the frame of the webcam and find the is_left value
         ret,frame = cam.read()
         value = is_left(frame)
-        print(value)
+        print("VALUE:{}" .format(value))
         
-        # if it finds the ball turn the motor
-        if value == "can't find ball":
-            pass
-        else: 
-            motor_turn(value)
-
         #find the biggest contour
         contours = ping.process(frame)
         if not len(contours) == 0:
@@ -254,10 +284,18 @@ if __name__ == "__main__":
                 if area > mas_area:
                     mas_area = area
                     best_contour = i
-            
+        else:
+            best_contour = [] 
+                  
         #find distance to ball
         distance = find_distance(FOCAL_LENGTH, OBJECT_WIDTH, best_contour)
-        print(distance)
+        print("DISTANCE: {}" .format(distance))
+
+        # if it finds the ball turn the motor
+        if value == "can't find ball":
+            pass
+        else: 
+            motor_turn(value, distance,vader)
         
         ''' #draws what it sees
         #put a green outline for the contours of the ball
@@ -277,4 +315,15 @@ if __name__ == "__main__":
         cv2.imshow("frame",frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+            
+            
+        (x,y),radius = cv2.minEnclosingCircle(best_contour)
+        center = (int(x),int(y))
+        radius = int(radius)
+        cv2.circle(frame,center,radius,(0,255,0),2)
+        cv2.imshow("frame",frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
         '''
+        
+        #time.sleep(0.5)
