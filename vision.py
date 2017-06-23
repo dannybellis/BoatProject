@@ -12,7 +12,14 @@ MAX_ANGLE = 40
 FOCAL_LENGTH = 0
 OBJECT_WIDTH = 0
 
-
+#prop is short for proportion
+#prop ranges from -1 to 1
+#returns a value between low and high based on prop
+#-1 will give low, 1 will give high
+#function is linear
+def valueFromProp(prop, low, high):
+    #runs the function y=mx+b where slope is m=(high-1ow)/2 and y-intercept is b=(low+high)/2
+    return (((high-low)/2.0)*prop) + ((low+high)/2)
 
 #prints time of section of code
 class Timer:
