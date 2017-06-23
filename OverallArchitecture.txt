@@ -15,4 +15,5 @@ CommandCenterClass:
 The odd class. This one runs all the commands used to actually control the boat
 
 Boat Class:
-Has Vader, Propeller, Vision
+Has Vader, Propeller, Vision, and CommandCenter instances as properties.
+Methods are things like "go_to_GPS" and "search_GPS"
