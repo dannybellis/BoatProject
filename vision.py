@@ -9,6 +9,7 @@ import time
 
 #variables
 MAX_ANGLE = 40
+MIN_ANGLE = - MAX_ANGLE
 FOCAL_LENGTH = 35 #mm 
 OBJECT_WIDTH = 40 #mm
 VADER_DISTANCE = 100 #distance from ball to relese the convader belt
@@ -38,7 +39,45 @@ class Timer:
 class Vader:
     def __init__(self):
         self.lowered = False
-        self.on = False 
+        self.on = False
+    def turn_on(self):
+        print("turning vader on")
+        self.on = True
+    def turn_off(self):
+        print("turning vader off")
+        self.on = False
+    def lower(self):
+        print("lowering vader")
+        self.lowered = True
+    def higher(self):
+        print("rasing vader")
+        self.lowered = False
+class Propeller:
+    def __init__(self, max_throttle, min_throttle):
+        self.max_throttle = max_throttle
+        self.min_throttle = min_throttle
+        self.on = False
+        self.throttle = min_throttle
+    def set_throttle(self, throttle):
+        if throttle == self.min_throttle:
+            self.on = False
+        else:
+            self.on = True 
+        print("setting throttle to {}" .format(throttle))
+        self.throttle = throttle
+class Rutter:
+    def __init__(self, max_angle, min_angle):
+        self.max_angle = max_angle
+        self.min_angle = min_angle
+        self.angle = 0
+    def turn_rutter(self, angle):
+        if angle < self.min_angle:
+            angle = self.min_angle
+        elif angle > self.max_angle:
+            angle = self.max_angle 
+        print("setting angle to {}" .format(angle))
+        self.angle = angle
+        
         
 #returns a list of the contours of the ball  
 class PingPongBall:
@@ -204,36 +243,32 @@ def is_left(img):
 
 #TODO finish
 # turns the motor based on the value is_left returns 
-def motor_turn(value, distance, vader):
-    global MAX_ANGLE, VADER_DISTANCE, VADER_GO, VADER_OFF, MAX_THROTTLE
-    angle = value * MAX_ANGLE
-    if value > 0.1:
-        print("motor turns " + str(angle) + " to the right")
-    elif value < -0.1:
-        print("motor turns " + str(angle) + " to the left")
-    else:
-        print("Stay center")
+def motor_control(value, distance, vader, propeller, rutter):
+    global  VADER_DISTANCE, VADER_GO, VADER_OFF
+    angle = value * rutter.max_angle
+    if angle < 0.1 and angle > -0.1:
+        angle = 0 
+    rutter.turn_rutter(angle)
 
     if distance > VADER_DISTANCE:
-        print("setting throttle to {}" .format(MAX_THROTTLE))
+        propeller.set_throttle(propeller.max_throttle)
+
     elif distance <VADER_DISTANCE and distance > VADER_GO:
-        print("setting throttle to {}" .format(MAX_THROTTLE/2))
+        propeller.set_throttle(propeller.max_throttle/2)
         if vader.lowered == False: 
-            vader.lowered = True
-            print("Lowering Vader")
+            vader.lower()
     elif distance < VADER_GO and distance > VADER_OFF:
-        print("Setting throttle to {}" .format(MAX_THROTTLE/4))
+        propeller.set_throttle(propeller.max_throttle/4)
         if vader.on == False:
-            vader.on = True
-            print("turning vader on")
+            vader.turn_on()
+        if vader.lowered == False: 
+            vader.lower()
     elif distance <= VADER_OFF:
-        print("Setttinr throttle to{}" .format(0))
+        propeller.set_throttle(propeller.min_throttle)
         if vader.on == True: 
-            vader.on = False
-            print("Turning Vader off")
+            vader.turn_off()
         if vader.lowered == True: 
-            vader.lowered = False
-            print("raising vader") 
+            vader.higher() 
     
     #TODO make this a list of commands to run
     command = None   
@@ -245,17 +280,10 @@ def motor_turn(value, distance, vader):
 #returns the distance between an object and the camera        
 def find_distance(focal_length, real_width, contours):
 
-##    lst = []
-##    for i in contours:
-##        lst.append(i[0][0])
-##    max_lst = max(lst)
-##    min_lst = min(lst)
-##    px_width = max_lst - min_lst
     if len(contours) == 0:
         return 0 
     (x,y), radius = cv2.minEnclosingCircle(contours)
     px_width = radius * 2
-    print("px_Width:{}" .format(px_width))
     return (real_width * focal_length) / px_width
 
     
@@ -265,6 +293,9 @@ if __name__ == "__main__":
     cam = cv2.VideoCapture(0)
     ping = PingPongBall()
     vader = Vader()
+    propeller = Propeller(MAX_THROTTLE, MIN_THROTTLE)
+    rutter = Rutter(MAX_ANGLE, MIN_ANGLE)
+     
     
     # using webcam print the result of is_left to determine wether the boat should go left or right and how much
     for i in range(100):
@@ -295,7 +326,7 @@ if __name__ == "__main__":
         if value == "can't find ball":
             pass
         else: 
-            motor_turn(value, distance,vader)
+            motor_control(value, distance,vader,propeller,rutter)
         
         ''' #draws what it sees
         #put a green outline for the contours of the ball
