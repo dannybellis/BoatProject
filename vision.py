@@ -1,4 +1,6 @@
 #Written by Fiona Shyne and London Lowmanstone
+#properties and methods should be lowercase with underscores in-between words
+#for example: def say_hello()
 
 #imports
 import cv2
@@ -6,6 +8,7 @@ import numpy as np
 import math
 from enum import Enum
 import time
+import subprocess
 
 #variables
 MAX_ANGLE = 40
@@ -22,9 +25,46 @@ MIN_THROTTLE = 0 #the lowest throttle level
 #returns a value between low and high based on prop
 #-1 will give low, 1 will give high
 #function is linear
-def valueFromProp(prop, low, high):
+def value_from_prop(prop, low, high):
     #runs the function y=mx+b where slope is m=(high-1ow)/2 and y-intercept is b=(low+high)/2
     return (((high-low)/2.0)*prop) + ((low+high)/2)
+
+class CommandCenter():
+    exDir = "~/rsn/umn-ros-pkg/rsn/carpMonitoring/scripts_cmd" #directory to excecute commands from
+    
+    @staticmethod
+    def do(what, *values):
+        setCommands = {"rudder":"steer_cmd.sh", "propeller":"prop_cmd.sh"}
+        
+        '''excecutes a command in the shell of the computer to do something
+        If what is "rudder" or "propeller", then *values should be [value to set the thing to, comment aka how much you want it to print]
+        '''
+        if what in setCommands:
+            #I could make this a lot fewer lines, but then if it throws an error we have very little idea of what went wrong
+            value = values[0]
+            if len(values)==2:
+                comment=values[1]
+            else:
+                comment=1 #default
+            command = "{} {}".format(setCommands[what], value)
+            command = CommandCenter.add_dir_to_command(CommandCenter.exDir, command)
+            CommandCenter.excecuteCommand(command, comment=comment)
+            
+        
+    @staticmethod
+    def add_dir_to_command(directory, command):
+        return "cd {} && {}".format(directory, command)
+        
+    @staticmethod
+    def excecuteCommand(command, comment=0):
+        if comment==1:
+            print("Running command '{}'".format(command))
+        output = subprocess.check_output([command], shell=True)
+        if comment==2:
+            print("Output of the command was: '{}'".format(output))
+        return output
+        
+        
 
 #prints time of section of code
 class Timer:
@@ -204,9 +244,10 @@ def is_left(img):
 
 #TODO finish
 # turns the motor based on the value is_left returns 
-def motor_turn(value, distance, vader):
+def motor_control(value, distance, vader):
     global MAX_ANGLE, VADER_DISTANCE, VADER_GO, VADER_OFF, MAX_THROTTLE
-    angle = value * MAX_ANGLE
+    angle = value * MAX_ANGLE #equivalent to: valueFromProp(value, -MAX_ANGLE, MAX_ANGLE)
+    
     if value > 0.1:
         print("motor turns " + str(angle) + " to the right")
     elif value < -0.1:
@@ -215,9 +256,9 @@ def motor_turn(value, distance, vader):
         print("Stay center")
 
     if distance > VADER_DISTANCE:
-        print("setting throttle to {}" .format(MAX_THROTTLE))
+        print("Setting throttle to {}" .format(MAX_THROTTLE))
     elif distance <VADER_DISTANCE and distance > VADER_GO:
-        print("setting throttle to {}" .format(MAX_THROTTLE/2))
+        print("Setting throttle to {}" .format(MAX_THROTTLE/2))
         if vader.lowered == False: 
             vader.lowered = True
             print("Lowering Vader")
@@ -225,15 +266,15 @@ def motor_turn(value, distance, vader):
         print("Setting throttle to {}" .format(MAX_THROTTLE/4))
         if vader.on == False:
             vader.on = True
-            print("turning vader on")
+            print("Turning vader on")
     elif distance <= VADER_OFF:
-        print("Setttinr throttle to{}" .format(0))
+        print("Setting throttle to{}" .format(0))
         if vader.on == True: 
             vader.on = False
             print("Turning Vader off")
         if vader.lowered == True: 
             vader.lowered = False
-            print("raising vader") 
+            print("Raising vader") 
     
     #TODO make this a list of commands to run
     command = None   
