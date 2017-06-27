@@ -1,0 +1,19 @@
+1. Travel to GPS
+2. Search GPS area for trash until we find it
+3. Go and pick up trash
+4. Return to original point
+
+Classes for each main component.
+conveyor, Propeller, Vision class
+Boat Class
+CommandCenterClass
+
+Vision:
+Finds the ball and returns a proportion for the rudder (side-to-side motion) and a distance for the propeller (forward motion)
+
+CommandCenterClass:
+The odd class. This one runs all the commands used to actually control the boat
+
+Boat Class:
+Has conveyor, Propeller, Vision, and CommandCenter instances as properties.
+Methods are things like "go_to_GPS" and "search_GPS"
