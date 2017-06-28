@@ -1,4 +1,16 @@
 #Authors: Fiona Shyne and London Lowmanstone
+import rospy
+import sys
+import time
+import random
+
+from gps_common.msg import GPSFix
+from gps_common.msg import GPSStatus
+from sensor_msgs.msg import NavSatFix
+
+from std_msgs.msg import Float32
+from std_msgs.msg import Int8
+
 
 from command_center import CommandCenter
 from rudder import Rudder
@@ -18,13 +30,11 @@ class Boat:
         self.VISION_FOCAL_LENGTH = 35 #mm
         self.VISION_OBJECT_WIDTH = 40 #mm
         self.CAMERA_PORT = 0
-        #CommandCenter uses static methods, so we should not create an instance
-        self.command_center = CommandCenter
         self.conveyor_lower = conveyor_lower
         self.conveyor_on = conveyor_on
         self.comment = comment
-        self.rudder = Rudder(self.RUDDER_MIN_ANGLE, self.RUDDER_MAX_ANGLE, self.command_center)
-        self.propeller = Propeller(self.PROPELLER_MIN_THROTTLE, self.PROPELLER_MAX_THROTTLE, self.command_center)
+        self.rudder = Rudder(self.RUDDER_MIN_ANGLE, self.RUDDER_MAX_ANGLE)
+        self.propeller = Propeller(self.PROPELLER_MIN_THROTTLE, self.PROPELLER_MAX_THROTTLE)
         self.conveyor = Conveyor()
         self.vision = Vision(self.CAMERA_PORT, self.VISION_FOCAL_LENGTH, self.VISION_OBJECT_WIDTH)
 
