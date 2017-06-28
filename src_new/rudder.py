@@ -1,8 +1,11 @@
 #Authors: Fiona Shyne and London Lowmanstone
+import rospy
+from std_msgs.msg import Int8
 
 class Rudder:
     def __init__(self, min_angle, max_angle):
-        self.command_center = command_center
+        self.RUDDER_PUB_TOPIC = "motor_cmd/steer"
+        self.pub_rudder = rospy.Publisher(self.RUDDER_PUB_TOPIC, Int8, queue_size=1)
         self.max_angle = max_angle
         self.min_angle = min_angle
         self.angle = 0
@@ -14,5 +17,5 @@ class Rudder:
             angle = self.max_angle 
         if comment == 1: 
             print("setting angle to {}" .format(angle))
-        self.command_center.do("rudder", angle)
+        self.pub_rudder.publish(angle)
         self.angle = angle
