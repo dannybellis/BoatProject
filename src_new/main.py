@@ -1,4 +1,6 @@
 #Authors: Fiona Shyne and London Lowmanstone
+#!/usr/bin/env python 
+
 boat = Boat(40, 20)
 # start the ros node
 rospy.init_node('simple_controller', anonymous=True)
