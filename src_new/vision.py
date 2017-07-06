@@ -162,7 +162,7 @@ class Vision:
         max_lst = max(lst)
         min_lst = min(lst)
         average = (max_lst + min_lst) / 2
-        return -(average / middle)
+        return -(float(average) / float(middle))
     
     #returns the distance between an object and the camera        
     def find_distance(self,img):
