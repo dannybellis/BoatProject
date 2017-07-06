@@ -1,7 +1,11 @@
 #Authors: Fiona Shyne and London Lowmanstone
-from boat import Boat
 boat = Boat(40, 20)
+# start the ros node
+rospy.init_node('simple_controller', anonymous=True)
+rate = rospy.Rate(10) # 10hz
+initial_flag = 1 
+while not rospy.is_shutdown():
 
-while True: 
     boat.drive()
+    rate.sleep()
     
