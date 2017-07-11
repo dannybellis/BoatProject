@@ -69,14 +69,16 @@ class boatFunctions:
         self.throttle = throttle
         
     def conveyor(self, on, lowered, comment=0):
-        if on == True:
-            self.conveyor_on = True
-        if on == False:
-            self.conveyor_on = False
-        if lowered == True:
-            self.conveyor_lowered = True
-        if lowered == False:
-            self.conveyor_lowered = False
+        if isinstance(on, bool): 
+            self.coneveyor_on = on
+        else: 
+            print("Error: cannot understand on variable please enter a bool")
+            
+        if isinstance(lowered, bool): 
+            self.coneveyor_lowered = lowered
+        else: 
+            print("Error: icannot understand lowered variable please enter a bool")
+            
         if comment == 1: 
             print("{}: The Conveyor is {} and {}" .format(time.time(), on, lowered))
 
