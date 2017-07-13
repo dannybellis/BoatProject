@@ -44,6 +44,8 @@ class boatFunctions:
         self.COMPASS_SUB_TOPIC = "sensors/compass"
         self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
         
+        self.rate.sleep()
+        
     def set_angle(self, angle, comment=0):
         if angle <= self.min_angle:
             angle = self.min_angle
