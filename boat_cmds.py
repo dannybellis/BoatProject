@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 #Code by Daniel Ellis, Fiona Shyne and London Lowmanstone
 
 import rospy
@@ -53,6 +53,7 @@ class boatFunctions:
             print("{}: Setting angle to {}" .format(time.time(), angle))
         self.pub_rudder.publish(angle)
         self.angle = angle
+        rate.sleep()
         
     def set_throttle(self, throttle, comment=0):
         if throttle == 0:
@@ -67,6 +68,7 @@ class boatFunctions:
             print("{}: Setting throttle to {}" .format(time.time(), throttle))
         self.pub_prop.publish(throttle)
         self.throttle = throttle
+        rate.sleep()
         
     def conveyor(self, on, lowered, comment=0):
         if isinstance(on, bool): 
@@ -81,14 +83,17 @@ class boatFunctions:
             
         if comment == 1: 
             print("{}: The Conveyor is {} and {}" .format(time.time(), on, lowered))
+        rate.sleep()
 
     def gps_msg(self, msg):
         print("latitude :", msg.latitude)
         print("longitude :", msg.longitude)
         print("error covariance :", msg.position_covariance)
+        rate.sleep()
         
-    def compass_msg(msg):
+    def compass_msg(self, msg):
         print("heading: ", msg.data)
+        rate.sleep()
 
 
         
