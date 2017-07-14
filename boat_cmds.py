@@ -17,12 +17,16 @@ from std_msgs.msg import Int8
 class boatFunctions:
     
     def __init__(self, min_angle, max_angle, min_throttle, max_throttle):
+
+        rospy.init_node('boat_cmds', anonymous=True)
+        self.rate = rospy.Rate(1) # 10hz
+
         #Rudder
         self.RUDDER_PUB_TOPIC = "motor_cmd/steer"
         self.pub_rudder = rospy.Publisher(self.RUDDER_PUB_TOPIC, Int8, queue_size=1)
         self.min_angle = min_angle
         self.max_angle = max_angle
-        self.angle = 0
+        self.angle = min_angle
         
         #Propeller
         self.PROP_PUB_TOPIC = "motor_cmd/propeller"
@@ -30,7 +34,8 @@ class boatFunctions:
         self.max_throttle = max_throttle
         self.min_throttle = min_throttle
         self.throttle_on = False
-        self.throttle = min_throttle
+        self.throttle = 0
+	
         
         #Conveyor
         self.conveyor_on = False
@@ -44,8 +49,8 @@ class boatFunctions:
         self.COMPASS_SUB_TOPIC = "sensors/compass"
         self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
         
-        self.rate.sleep()
-        
+	self.rate.sleep()
+
     def set_angle(self, angle, comment=0):
         if angle <= self.min_angle:
             angle = self.min_angle
@@ -55,7 +60,7 @@ class boatFunctions:
             print("{}: Setting angle to {}" .format(time.time(), angle))
         self.pub_rudder.publish(angle)
         self.angle = angle
-        rate.sleep()
+        self.rate.sleep()
         
     def set_throttle(self, throttle, comment=0):
         if throttle == 0:
@@ -70,7 +75,7 @@ class boatFunctions:
             print("{}: Setting throttle to {}" .format(time.time(), throttle))
         self.pub_prop.publish(throttle)
         self.throttle = throttle
-        rate.sleep()
+        self.rate.sleep()
         
     def conveyor(self, on, lowered, comment=0):
         if isinstance(on, bool): 
@@ -85,26 +90,18 @@ class boatFunctions:
             
         if comment == 1: 
             print("{}: The Conveyor is {} and {}" .format(time.time(), on, lowered))
-        rate.sleep()
+        self.rate.sleep()
 
     def gps_msg(self, msg):
         print("latitude :", msg.latitude)
         print("longitude :", msg.longitude)
         print("error covariance :", msg.position_covariance)
-        rate.sleep()
+        self.rate.sleep()
         
     def compass_msg(self, msg):
         print("heading: ", msg.data)
-        rate.sleep()
+        self.rate.sleep()
 
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+boat = boatFunctions(-40,40,-120,120)
+boat.set_angle(0,1)
+boat.set_throttle(0, 1)
