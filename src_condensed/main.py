@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from boat_cmds.py import boat_functions
 from Vision.py import Vision 
 
