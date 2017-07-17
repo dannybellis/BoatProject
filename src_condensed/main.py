@@ -17,6 +17,17 @@ COMMENT = 0 # if set to one print commands
 boat = boatFunctions(MIN_ANGLE,MAX_ANGLE,MIN_THROTTLE,MAX_THROTTLE)
 vision = Vision(CAM_PORT,FOCAL_LENGTH,OBJ_WIDTH)
 
+def search(): 
+	found_ball = False
+	while found_ball == False: 
+		is_left, distance = vision.find_object_position() 
+		if not is_left is None: 
+			break 
+		else: 
+			boat.set_throttle(MAX_THROTTLE / 4) 
+			boat.set_angle(0.2) 
+			
+
 initial_flag = 1
 while not rospy.is_shutdown():
 	#turn everything of to begin with 
