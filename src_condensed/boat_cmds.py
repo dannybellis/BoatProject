@@ -86,7 +86,7 @@ class boatFunctions:
         if isinstance(lowered, bool): 
             self.coneveyor_lowered = lowered
         else: 
-            print("Error: icannot understand lowered variable please enter a bool")
+            print("Error: cannot understand lowered variable please enter a bool")
             
         if comment == 1: 
             print("{}: The Conveyor is {} and {}" .format(time.time(), on, lowered))
