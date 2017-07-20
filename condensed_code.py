@@ -17,12 +17,13 @@ import cv2
 from cv_bridge import *
 
 
+
 MIN_ANGLE = -40 
 MAX_ANGLE = 40 
 MIN_THROTTLE = -120 
 MAX_THROTTLE = 120
 CAM_PORT = 0 
-FOCAL_LENGTH = 35 
+FOCAL_LENGTH = 45 
 OBJ_WIDTH = 40 #mm 
 CONVEYOR_ON = 20# distance from object to turn on conveyor 
 CONVEYOR_LOWER = 10 #at what distance from the object should the conveyor be lowered 
@@ -69,7 +70,7 @@ class boatFunctions:
         
 	self.rate.sleep()
 
-    def set_angle(self, angle, comment=0, significant_angle = 0):
+    def set_angle(self, angle, comment=0):
         if angle <= self.min_angle:
             angle = self.min_angle
         if angle >= self.max_angle:
@@ -163,13 +164,14 @@ class Vision:
 
         self.cv_erode_output = None
 
-        self.__blur_input = self.cv_erode_output
+        """self.__blur_input = self.cv_erode_output
+	BlurType = Enum('BlurType', 'Box_Blur Gaussian_Blur Median_Filter Bilateral_Flilter')
         self.__blur_type = BlurType.Gaussian_Blur
         self.__blur_radius = 1.801801801801802
 
-        self.blur_output = None
+        self.blur_output = None/"""
 
-        self.__cv_threshold_src = self.blur_output
+        self.__cv_threshold_src = self.cv_erode_output
         self.__cv_threshold_thresh = 1.0
         self.__cv_threshold_maxval = 255.0
         self.__cv_threshold_type = cv2.THRESH_BINARY
@@ -207,11 +209,11 @@ class Vision:
         (self.cv_erode_output) = self.__cv_erode(self.__cv_erode_src, self.__cv_erode_kernel, self.__cv_erode_anchor, self.__cv_erode_iterations, self.__cv_erode_bordertype, self.__cv_erode_bordervalue)
 
         # Step Blur0:
-        self.__blur_input = self.cv_erode_output
-        (self.blur_output) = self.__blur(self.__blur_input, self.__blur_type, self.__blur_radius)
+        #self.__blur_input = self.cv_erode_output
+        #(self.blur_output) = self.__blur(self.__blur_input, self.__blur_type, self.__blur_radius)
 
         # Step CV_Threshold0:
-        self.__cv_threshold_src = self.blur_output
+        self.__cv_threshold_src = self.cv_erode_output
         (self.cv_threshold_output) = self.__cv_threshold(self.__cv_threshold_src, self.__cv_threshold_thresh, self.__cv_threshold_maxval, self.__cv_threshold_type)
 
         # Step Find_Contours0:
@@ -314,7 +316,7 @@ class Vision:
         else:
             mode = cv2.RETR_LIST
         method = cv2.CHAIN_APPROX_SIMPLE
-        im2, contours, hierarchy =cv2.findContours(input, mode=mode, method=method)
+        contours, hierarchy =cv2.findContours(input, mode=mode, method=method)
         return contours
 
     @staticmethod
@@ -437,7 +439,7 @@ while not rospy.is_shutdown():
 		    else: 
 			
 		       #move the rudder
-		       boat.set_angle(angle, COMMENT, SIGNIFICANT_RUDDER_ANGLE)
+		       boat.set_angle(angle, COMMENT)
 			
 		    if CONVEYOR_LOWER < distance:
 			if not boat.throttle == MAX_THROTTLE*SPEEDS["unlowered"]:
