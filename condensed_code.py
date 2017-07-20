@@ -146,43 +146,76 @@ class Vision:
         self.cam = cv2.VideoCapture(camera_port)
         self.focal_length = focal_length
         self.object_width = object_width 
-        self.__hsl_threshold_hue = [5, 60]
-        self.__hsl_threshold_saturation = [218, 255.0]
-        self.__hsl_threshold_luminance = [158, 255]
+	
+	
+        self.__hsv_threshold_hue = [9.712230215827338, 34.095563139931755]
+        self.__hsv_threshold_saturation = [2.293165467625899, 239.76962457337888]
+        self.__hsv_threshold_value = [231.60971223021585, 255.0]
 
-        self.hsl_threshold_output = None
+        self.hsv_threshold_output = None
 
-        self.__find_contours_input = self.hsl_threshold_output
+        self.__cv_erode_src = self.hsv_threshold_output
+        self.__cv_erode_kernel = None
+        self.__cv_erode_anchor = (-1, -1)
+        self.__cv_erode_iterations = 3.0
+        self.__cv_erode_bordertype = cv2.BORDER_CONSTANT
+        self.__cv_erode_bordervalue = (-1)
+
+        self.cv_erode_output = None
+
+        self.__blur_input = self.cv_erode_output
+        self.__blur_type = BlurType.Gaussian_Blur
+        self.__blur_radius = 1.801801801801802
+
+        self.blur_output = None
+
+        self.__cv_threshold_src = self.blur_output
+        self.__cv_threshold_thresh = 1.0
+        self.__cv_threshold_maxval = 255.0
+        self.__cv_threshold_type = cv2.THRESH_BINARY
+
+        self.cv_threshold_output = None
+
+        self.__find_contours_input = self.cv_threshold_output
         self.__find_contours_external_only = False
 
         self.find_contours_output = None
 
         self.__filter_contours_contours = self.find_contours_output
-        self.__filter_contours_min_area = 50.0
-        self.__filter_contours_min_perimeter = 0
+        self.__filter_contours_min_area = 2.0
+        self.__filter_contours_min_perimeter = 2.0
         self.__filter_contours_min_width = 0
         self.__filter_contours_max_width = 1000
         self.__filter_contours_min_height = 0
-        self.__filter_contours_max_height = 1000.0
-        self.__filter_contours_solidity = [81.83453237410072, 100]
-        self.__filter_contours_max_vertices = 1.0E11
-        self.__filter_contours_min_vertices = 0
-        self.__filter_contours_min_ratio = 0
+        self.__filter_contours_max_height = 1000
+        self.__filter_contours_solidity = [29.67625899280576, 100]
+        self.__filter_contours_max_vertices = 1000000
+        self.__filter_contours_min_vertices = 5.0
+        self.__filter_contours_min_ratio = 1.0
         self.__filter_contours_max_ratio = 1000
 
         self.filter_contours_output = None
 
 
     def process(self, source0):
-        """
-        Runs the pipeline and sets all outputs to new values.
-        """
-        # Step HSL_Threshold0:
-        self.__hsl_threshold_input = source0
-        (self.hsl_threshold_output) = self.__hsl_threshold(self.__hsl_threshold_input, self.__hsl_threshold_hue, self.__hsl_threshold_saturation, self.__hsl_threshold_luminance)
+         # Step HSV_Threshold0:
+        self.__hsv_threshold_input = source0
+        (self.hsv_threshold_output) = self.__hsv_threshold(self.__hsv_threshold_input, self.__hsv_threshold_hue, self.__hsv_threshold_saturation, self.__hsv_threshold_value)
+
+        # Step CV_erode0:
+        self.__cv_erode_src = self.hsv_threshold_output
+        (self.cv_erode_output) = self.__cv_erode(self.__cv_erode_src, self.__cv_erode_kernel, self.__cv_erode_anchor, self.__cv_erode_iterations, self.__cv_erode_bordertype, self.__cv_erode_bordervalue)
+
+        # Step Blur0:
+        self.__blur_input = self.cv_erode_output
+        (self.blur_output) = self.__blur(self.__blur_input, self.__blur_type, self.__blur_radius)
+
+        # Step CV_Threshold0:
+        self.__cv_threshold_src = self.blur_output
+        (self.cv_threshold_output) = self.__cv_threshold(self.__cv_threshold_src, self.__cv_threshold_thresh, self.__cv_threshold_maxval, self.__cv_threshold_type)
 
         # Step Find_Contours0:
-        self.__find_contours_input = self.hsl_threshold_output
+        self.__find_contours_input = self.cv_threshold_output
         (self.find_contours_output) = self.__find_contours(self.__find_contours_input, self.__find_contours_external_only)
 
         # Step Filter_Contours0:
@@ -204,18 +237,68 @@ class Vision:
         return best_contour   
 
     @staticmethod
-    def __hsl_threshold(input, hue, sat, lum):
-        """Segment an image based on hue, saturation, and luminance ranges.
+    def __hsv_threshold(input, hue, sat, val):
+        """Segment an image based on hue, saturation, and value ranges.
         Args:
             input: A BGR numpy.ndarray.
             hue: A list of two numbers the are the min and max hue.
             sat: A list of two numbers the are the min and max saturation.
-            lum: A list of two numbers the are the min and max luminance.
+            lum: A list of two numbers the are the min and max value.
         Returns:
             A black and white numpy.ndarray.
         """
-        out = cv2.cvtColor(input, cv2.COLOR_BGR2HLS)
-        return cv2.inRange(out, (hue[0], lum[0], sat[0]),  (hue[1], lum[1], sat[1]))
+        out = cv2.cvtColor(input, cv2.COLOR_BGR2HSV)
+        return cv2.inRange(out, (hue[0], sat[0], val[0]),  (hue[1], sat[1], val[1]))
+
+    @staticmethod
+    def __cv_erode(src, kernel, anchor, iterations, border_type, border_value):
+        """Expands area of lower value in an image.
+        Args:
+           src: A numpy.ndarray.
+           kernel: The kernel for erosion. A numpy.ndarray.
+           iterations: the number of times to erode.
+           border_type: Opencv enum that represents a border type.
+           border_value: value to be used for a constant border.
+        Returns:
+            A numpy.ndarray after erosion.
+        """
+        return cv2.erode(src, kernel, anchor, iterations = (int) (iterations +0.5),
+                            borderType = border_type, borderValue = border_value)
+
+    @staticmethod
+    def __blur(src, type, radius):
+        """Softens an image using one of several filters.
+        Args:
+            src: The source mat (numpy.ndarray).
+            type: The blurType to perform represented as an int.
+            radius: The radius for the blur as a float.
+        Returns:
+            A numpy.ndarray that has been blurred.
+        """
+        if(type is BlurType.Box_Blur):
+            ksize = int(2 * round(radius) + 1)
+            return cv2.blur(src, (ksize, ksize))
+        elif(type is BlurType.Gaussian_Blur):
+            ksize = int(6 * round(radius) + 1)
+            return cv2.GaussianBlur(src, (ksize, ksize), round(radius))
+        elif(type is BlurType.Median_Filter):
+            ksize = int(2 * round(radius) + 1)
+            return cv2.medianBlur(src, ksize)
+        else:
+            return cv2.bilateralFilter(src, -1, round(radius), round(radius))
+
+    @staticmethod
+    def __cv_threshold(src, thresh, max_val, type):
+        """Apply a fixed-level threshold to each array element in an image
+        Args:
+            src: A numpy.ndarray.
+            thresh: Threshold value.
+            max_val: Maximum value for THRES_BINARY and THRES_BINARY_INV.
+            type: Opencv enum.
+        Returns:
+            A black and white numpy.ndarray.
+        """
+        return cv2.threshold(src, thresh, max_val, type)[1]
 
     @staticmethod
     def __find_contours(input, external_only):
@@ -231,9 +314,8 @@ class Vision:
         else:
             mode = cv2.RETR_LIST
         method = cv2.CHAIN_APPROX_SIMPLE
-        contours, hierarchy =cv2.findContours(input, mode=mode, method=method)
+        im2, contours, hierarchy =cv2.findContours(input, mode=mode, method=method)
         return contours
-    
 
     @staticmethod
     def __filter_contours(input_contours, min_area, min_perimeter, min_width, max_width,
