@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#Goes to a set gps coordination and tracks an orange pingpong ball 
+#Collects ping pong ball using a conveyor belt 
+
 import rospy
 import sys
 import time
