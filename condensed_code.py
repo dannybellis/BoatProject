@@ -12,6 +12,8 @@ from sensor_msgs.msg import NavSatFix
 
 from std_msgs.msg import Float32
 from std_msgs.msg import Int8
+from std_msgs.msg import Bool
+
 
 import cv2
 from cv_bridge import *
@@ -57,6 +59,10 @@ class boatFunctions:
 	
         
         #Conveyor
+		self.LOWER_PUB_TOPIC = "motor_cmd/conveyor_lower" 
+		self.CONVEYOR_ON_PUB_TOPIC = "motor_cmd/conveyor_on"
+		self.pub_conveyor_lower = rospy.Publisher(self.LOWER_PUB_TOPIC,Bool,queue_size = 1) 
+		self.pub_conveyor_on = rospy.Publisher(self.CONVEYOR_ON_PUB_TOPIC,Bool,queue_size = 1)
         self.conveyor_on = False
         self.conveyor_lowered = False
         
@@ -99,11 +105,13 @@ class boatFunctions:
     def conveyor(self, on, lowered, comment=0):
         if isinstance(on, bool): 
             self.coneveyor_on = on
+			self.pub_conveyor_on.publish(on)
         else: 
             print("Error: cannot understand on variable please enter a bool")
             
         if isinstance(lowered, bool): 
             self.coneveyor_lowered = lowered
+			self.pub_conveyor_lowered.publish(on)
         else: 
             print("Error: cannot understand lowered variable please enter a bool")
             
@@ -129,8 +137,8 @@ class boatFunctions:
 
 def search(): 
    print("searching for ball") 
-   if not boat.throttle == MAX_THROTTLE/4:
-      boat.set_throttle(MAX_THROTTLE / 4) 
+   if not boat.throttle == MAX_THROTTLE* 0.6:
+      boat.set_throttle(MAX_THROTTLE / 0.6) 
 
    if not boat.angle == 10: 
       boat.set_angle(10) 
@@ -403,7 +411,8 @@ class Vision:
 boat = boatFunctions(MIN_ANGLE,MAX_ANGLE,MIN_THROTTLE,MAX_THROTTLE, EXTRA_COMMENT)
 vision = Vision(CAM_PORT,FOCAL_LENGTH,OBJ_WIDTH)
 
-
+search_count = 0 #count how many times it can't find the ball 
+find_count = 0 #count how many times it can find the ball 
 initial_flag = 1
 while not rospy.is_shutdown():
 	#turn everything of to begin with 
@@ -415,31 +424,42 @@ while not rospy.is_shutdown():
 		
 		
 		#proportion of the max propeller speed that the propeller should run at based on what the conveyor belt should be doing
-		SPEEDS = {"on":.25, "lowered":.5, "unlowered":1}
+		SPEEDS = {"on":.2, "lowered":.40, "unlowered":0.60}
 		
 		# find left to right posistion and distance to object 
 		left_val, distance = vision.find_object_position()
 		
 		if left_val is None: 
-			print("can't find ball")
-			search() 
+		   print("can't find ball")
+		   find_count = 0 
+		   if search_count < 5: 
+		      print("do nothing") 
+		      search_count += 1
+		   else:
+		      search() 
 		elif left_val == "camera": 
       		    print("add the webcam") 
 		    break
 		else:
-		    angle = left_val * MAX_ANGLE
-		    print("left_val:" + str(left_val))
-
-		    #stop it from correcting super slight angles
-		    if abs(angle) < SIGNIFICANT_RUDDER_ANGLE:
-			angle = 0
-
-		    if abs(angle - boat.angle) < SIGNIFICANT_RUDDER_ANGLE: 
-			print("keeping the angle the same") 
+		    search_count = 0 
+		    if find_count < 5: 
+			print("do nothing")
+			find_count += 1 
 		    else: 
-			
-		       #move the rudder
-		       boat.set_angle(angle, COMMENT)
+		        angle = left_val * MAX_ANGLE
+		        print("left_val:" + str(left_val))
+		        print("distance:" + str(distance))
+
+		        #stop it from correcting super slight angles
+		        if abs(angle) < SIGNIFICANT_RUDDER_ANGLE:
+			    angle = 0
+
+		        if abs(angle - boat.angle) < SIGNIFICANT_RUDDER_ANGLE: 
+			    print("keeping the angle the same") 
+
+		        else: 
+		           #move the rudder
+		           boat.set_angle(angle, COMMENT)
 			
 		    if CONVEYOR_LOWER < distance:
 			if not boat.throttle == MAX_THROTTLE*SPEEDS["unlowered"]:
