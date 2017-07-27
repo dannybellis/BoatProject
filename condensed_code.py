@@ -41,53 +41,52 @@ class boatFunctions:
     
     def __init__(self, min_angle, max_angle, min_throttle, max_throttle, target_lat, target_lon, extra_comment = 0):
 
-        rospy.init_node('boat_cmds', anonymous=True)
-        self.rate = rospy.Rate(1) # 10hz
-	
-	self.extra_comment = extra_comment 
+		rospy.init_node('boat_cmds', anonymous=True)
+		self.rate = rospy.Rate(1) # 10hz
+		self.extra_comment = extra_comment 
 
         #Rudder
-        self.RUDDER_PUB_TOPIC = "motor_cmd/steer"
-        self.pub_rudder = rospy.Publisher(self.RUDDER_PUB_TOPIC, Int8, queue_size=1)
-        self.min_angle = min_angle
-        self.max_angle = max_angle
-        self.angle = min_angle
+		self.RUDDER_PUB_TOPIC = "motor_cmd/steer"
+		self.pub_rudder = rospy.Publisher(self.RUDDER_PUB_TOPIC, Int8, queue_size=1)
+		self.min_angle = min_angle
+		self.max_angle = max_angle
+		self.angle = min_angle
         
-        #Propeller
-        self.PROP_PUB_TOPIC = "motor_cmd/propeller"
-        self.pub_prop = rospy.Publisher(self.PROP_PUB_TOPIC, Int8, queue_size=1)
-        self.max_throttle = max_throttle
-        self.min_throttle = min_throttle
-        self.throttle_on = False
-        self.throttle = 0
-	
-        
-        #Conveyor
-	self.LOWER_PUB_TOPIC = "motor_cmd/conveyor_lower" 
-	self.CONVEYOR_ON_PUB_TOPIC = "motor_cmd/conveyor_on"
-	self.pub_conveyor_lower = rospy.Publisher(self.LOWER_PUB_TOPIC,Bool,queue_size = 1) 
-	self.pub_conveyor_on = rospy.Publisher(self.CONVEYOR_ON_PUB_TOPIC,Bool,queue_size = 1)
-        self.conveyor_on = False
-        self.conveyor_lowered = False
-        
-        #GPS
-        self.GPS_FIX_SUB_TOPIC = "fix"
-        self.gps = rospy.Subscriber(self.GPS_FIX_SUB_TOPIC, NavSatFix, self.gps_msg)
-	self.lat = 0
-	self.lon = 0
-        
-        #Compass
-        self.COMPASS_SUB_TOPIC = "sensors/compass"
-        self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
-	self.heading = 0
-	
-	#Targeting
-	self.target_lat = target_lat
-	self.target_lon = target_lon
-	self.target_angle = 0
-	self.distance = 0
-	
-	self.rate.sleep()
+		#Propeller
+		self.PROP_PUB_TOPIC = "motor_cmd/propeller"
+		self.pub_prop = rospy.Publisher(self.PROP_PUB_TOPIC, Int8, queue_size=1)
+		self.max_throttle = max_throttle
+		self.min_throttle = min_throttle
+		self.throttle_on = False
+		self.throttle = 0
+
+
+		#Conveyor
+		self.LOWER_PUB_TOPIC = "motor_cmd/conveyor_lower" 
+		self.CONVEYOR_ON_PUB_TOPIC = "motor_cmd/conveyor_on"
+		self.pub_conveyor_lower = rospy.Publisher(self.LOWER_PUB_TOPIC,Bool,queue_size = 1) 
+		self.pub_conveyor_on = rospy.Publisher(self.CONVEYOR_ON_PUB_TOPIC,Bool,queue_size = 1)
+		self.conveyor_on = False
+		self.conveyor_lowered = False
+
+		#GPS
+		self.GPS_FIX_SUB_TOPIC = "fix"
+		self.gps = rospy.Subscriber(self.GPS_FIX_SUB_TOPIC, NavSatFix, self.gps_msg)
+		self.lat = 0
+		self.lon = 0
+		
+		#Compass
+		self.COMPASS_SUB_TOPIC = "sensors/compass"
+		self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
+		self.heading = 0
+
+		#Targeting
+		self.target_lat = target_lat
+		self.target_lon = target_lon
+		self.target_angle = 0
+		self.distance = 0
+
+		self.rate.sleep()
 
     def set_angle(self, angle, comment=0):
         if angle <= self.min_angle:
@@ -117,14 +116,14 @@ class boatFunctions:
         
     def conveyor(self, on, lowered, comment=0):
         if isinstance(on, bool): 
-            self.coneveyor_on = on
+			self.coneveyor_on = on
 			self.pub_conveyor_on.publish(on)
         else: 
             print("Error: cannot understand on variable please enter a bool")
             
         if isinstance(lowered, bool): 
-            self.coneveyor_lowered = lowered
-	    self.pub_conveyor_lowered.publish(on)
+			self.coneveyor_lowered = lowered
+			self.pub_conveyor_lower.publish(lowered)
         else: 
             print("Error: cannot understand lowered variable please enter a bool")
             
@@ -133,43 +132,43 @@ class boatFunctions:
             self.rate.sleep()
 
     def gps_msg(self, msg):
-	if self.extra_comment == 1:
-           print("latitude :", msg.latitude)
-           print("longitude :", msg.longitude)
-           print("error covariance :", msg.position_covariance)
-	   self.lat = msg.latitude
-	   self.lon = msg.longitude
-           self.rate.sleep()
+		if self.extra_comment == 1:
+			print("latitude :", msg.latitude)
+			print("longitude :", msg.longitude)
+			print("error covariance :", msg.position_covariance)
+		self.lat = msg.latitude
+		self.lon = msg.longitude
+		self.rate.sleep()
         
     def compass_msg(self, msg):
-	if self.extra_comment == 1:
-           print("heading: ", msg.data)
-	   self.heading = msg.data
-           self.rate.sleep()
+		if self.extra_comment == 1:
+		       print("heading: ", msg.data)
+		self.heading = msg.data
+		self.rate.sleep()
 	
-    def target_heading_direction(self)
-	self.compass_msg()
-	self.gps_msg()
-	lat1 = radians(self.lat)
-	lon1 = radians(self.lon)
-	lat2 = radians(self.target_lat)
-	lon2 = radians(self.target_lon)
-	target_heading = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), (math.cos(lat1)*math.sin(lat2))-(math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1)))
-	self.target_angle = math.degrees(target_heading)
-	self.rate.sleep()	
+    def target_heading_direction(self):
+		self.compass_msg()
+		self.gps_msg()
+		lat1 = radians(self.lat)
+		lon1 = radians(self.lon)
+		lat2 = radians(self.target_lat)
+		lon2 = radians(self.target_lon)
+		target_heading = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), (math.cos(lat1)*math.sin(lat2))-(math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1)))
+		self.target_angle = math.degrees(target_heading)
+		self.rate.sleep()	
 	
-    def Distance(lat1, lon1, lat2, lon2):
-        self.compass_msg()
-	self.gps_msg()
-	lat1 = radians(self.lat)
-	lon1 = radians(self.lon)
-	lat2 = radians(self.target_lat)
-	lon2 = radians(self.target_lon)
-        a = (math.sin((lat2-lat1)/2)**2)+math.cos(lat1)*math.cos(lat2)*(math.sin((lon2-lon1)/2)**2)
-        c = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))
-        distance = c*(6371e3)*3.28048
-	self.distance = distance
-        self.rate.sleep()
+    def Distance(self):
+		self.compass_msg()
+		self.gps_msg()
+		lat1 = radians(self.lat)
+		lon1 = radians(self.lon)
+		lat2 = radians(self.target_lat)
+		lon2 = radians(self.target_lon)
+		a = (math.sin((lat2-lat1)/2)**2)+math.cos(lat1)*math.cos(lat2)*(math.sin((lon2-lon1)/2)**2)
+		c = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))
+		distance = c*(6371e3)*3.28048
+		self.distance = distance
+		self.rate.sleep()
 
 
 
@@ -211,7 +210,7 @@ class Vision:
         self.cv_erode_output = None
 
         """self.__blur_input = self.cv_erode_output
-	BlurType = Enum('BlurType', 'Box_Blur Gaussian_Blur Median_Filter Bilateral_Flilter')
+		BlurType = Enum('BlurType', 'Box_Blur Gaussian_Blur Median_Filter Bilateral_Flilter')
         self.__blur_type = BlurType.Gaussian_Blur
         self.__blur_radius = 1.801801801801802
 
@@ -444,9 +443,9 @@ class Vision:
             return None, None 
         distance = self.find_distance(frame)
         return is_left, distance
-			
+	
 
-boat = boatFunctions(MIN_ANGLE,MAX_ANGLE,MIN_THROTTLE,MAX_THROTTLE, EXTRA_COMMENT)
+boat = boatFunctions(MIN_ANGLE,MAX_ANGLE,MIN_THROTTLE,MAX_THROTTLE,20,30, EXTRA_COMMENT)
 vision = Vision(CAM_PORT,FOCAL_LENGTH,OBJ_WIDTH)
 
 search_count = 0 #count how many times it can't find the ball 
@@ -500,20 +499,21 @@ while not rospy.is_shutdown():
 		           boat.set_angle(angle, COMMENT)
 			
 		    if CONVEYOR_LOWER < distance:
-			if not boat.throttle == MAX_THROTTLE*SPEEDS["unlowered"]:
-			   boat.set_throttle(MAX_THROTTLE*SPEEDS["unlowered"], COMMENT)
+				if not boat.throttle == MAX_THROTTLE*SPEEDS["unlowered"]:
+			   		boat.set_throttle(MAX_THROTTLE*SPEEDS["unlowered"], COMMENT)
+				boat.conveyor(False,False,COMMENT) 
 
 		    elif CONVEYOR_ON < distance and distance < CONVEYOR_LOWER:
-			if not boat.throttle == MAX_THROTTLE*SPEEDS["lowered"]:
-			   boat.set_throttle(MAX_THROTTLE*SPEEDS["lowered"], COMMENT)
-			boat.conveyor(False, True,COMMENT)
+				if not boat.throttle == MAX_THROTTLE*SPEEDS["lowered"]:
+			   		boat.set_throttle(MAX_THROTTLE*SPEEDS["lowered"], COMMENT)
+				boat.conveyor(False, True,COMMENT)
 
 		    elif distance < CONVEYOR_ON:
-			if not boat.throttle == MAX_THROTTLE*SPEEDS["on"]:
-			   boat.set_throttle(MAX_THROTTLE*SPEEDS["on"],COMMENT)
-			boat.conveyor(True,True,COMMENT)
+				if not boat.throttle == MAX_THROTTLE*SPEEDS["on"]:
+			   		boat.set_throttle(MAX_THROTTLE*SPEEDS["on"],COMMENT)
+				boat.conveyor(True,True,COMMENT)
 
 		    else: #turn coneyor off 
-			if not boat.throttle == 0:
-			   boat.set_throttle(0)
-			boat.conveyor(False,False,COMMENT)
+				if not boat.throttle == 0:
+			   		boat.set_throttle(0)
+				boat.conveyor(False,False,COMMENT)
