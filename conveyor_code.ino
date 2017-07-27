@@ -18,17 +18,18 @@ int off_pos = 90;
 int lowered_pos = 135; 
 int lowered_off_pos = 90;
 int raised_pos = 45;
-int wait_time = 100; //miliseconds to wait before turning lower motor off 
+int lower_wait_time = 100; //miliseconds to wait before turning lower motor off
+int on_wait_time = 1000;//milliseconds to wait before turning on motor off  
 
 
-
+// runs when new message is piblished on conveyor_lower topic
 void conveyor_lower( const std_msgs::Bool& msg){
   lowered_msg = msg.data;
   //lower conveyor belt
   if (lowered_msg){
       //lower conveyor belt 
       lower_servo.write(lowered_pos);
-      delay(wait_time); 
+      delay(lower_wait_time); 
       lower_servo.write(lowered_off_pos);
   }
   else{
@@ -39,12 +40,15 @@ void conveyor_lower( const std_msgs::Bool& msg){
   }
 }
 
+// runs when new message is piblished on conveyor_on topic
 void conveyor_on( const std_msgs::Bool& msg){
   on_msg = msg.data;
   //lower conveyor belt
   if (on_msg){
       //turn conveyor on
       on_servo.write(on_pos);
+      delay(on_wait_time); 
+      on_servo.write(off_pos);
       
   }
   else{
@@ -53,7 +57,7 @@ void conveyor_on( const std_msgs::Bool& msg){
   }
 } 
 
-
+//create subcribers
 ros::Subscriber<std_msgs::Bool> lower("motor_cmd/conveyor_lower", &conveyor_lower);
 ros::Subscriber<std_msgs::Bool> on("motor_cmd/conveyor_on", &conveyor_on);
 
