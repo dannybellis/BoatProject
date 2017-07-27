@@ -36,7 +36,7 @@ EXTRA_COMMENT = 0 #if set to one print extra comments like longitude
 
 class boatFunctions:
     
-    def __init__(self, min_angle, max_angle, min_throttle, max_throttle, extra_comment = 0):
+    def __init__(self, min_angle, max_angle, min_throttle, max_throttle, target_lat, target_lon, extra_comment = 0):
 
         rospy.init_node('boat_cmds', anonymous=True)
         self.rate = rospy.Rate(1) # 10hz
