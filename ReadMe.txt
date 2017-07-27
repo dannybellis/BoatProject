@@ -2,17 +2,22 @@ Boat project mission:
   collect an orange pingpong ball at a gps location using robotic boats and intake system 
 
 Where to find stuff on the vm 
-  1.programs to run the robot are located in rsn/umn-ros-pkg/rsn/carpMonitorinh/Bridge/nodes/ #notes on how to run robot are below
-  2.scripts to run the robot from the command line are in rsn/umn-ros-pkg/rsn/carpMonitoring/scripts_cmd/
-  3.arduino code for the conveyor belt is in the arduino folder under the home directitory 
-  4.arduino code to run the propellor and rudder are located in rsn/umn-ros-pkg/rsn/carpMonitoring/ 
+  programs to run the robot are located in rsn/umn-ros-pkg/rsn/carpMonitorinh/Bridge/nodes/ #notes on how to run robot are below
+  scripts to run the robot from the command line are in rsn/umn-ros-pkg/rsn/carpMonitoring/scripts_cmd/
+  arduino code for the conveyor belt is in the arduino folder under the home directitory 
+  arduino code to run the propellor and rudder are located in rsn/umn-ros-pkg/rsn/carpMonitoring/ 
   
-important programs 
-  located in the node folder is:
-    1.lavant_bridge_timer - run before you launch other code 
-    2.TargetTracking - main code for ping pong ball project 
-    3. boat_cmds -contains functions nessisary to run the boat 
-    4. Vision.py -gives position and distance to the orange pingpong ball 
+important programs (located in the node folder)
+    lavant_bridge_timer - run before you launch other code 
+    TargetTracking - main code for ping pong ball project 
+    boat_cmds -contains functions nessisary to run the boat 
+    Vision.py -gives position and distance to the orange pingpong ball 
+
+basic ros commands (run in the command line) 
+   roscore& - initialize ros 
+   roscd - go to import ros place (like Bridge) 
+   rostopic list -get a list of current ros topics 
+   rostopic echo -prints messages being sent to ros topics
   
 
 OpenCV download
