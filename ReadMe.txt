@@ -1,5 +1,19 @@
-Everything is in the folder "src"
-Note the class to control the conveyor belt is called "Vader" because conveyor sounds like "convader" so we shortened it to "vader".
+Boat project mission: 
+  collect an orange pingpong ball at a gps location using robotic boats and intake system 
+
+Where to find stuff on the vm 
+  1.programs to run the robot are located in rsn/umn-ros-pkg/rsn/carpMonitorinh/Bridge/nodes/ #notes on how to run robot are below
+  2.scripts to run the robot from the command line are in rsn/umn-ros-pkg/rsn/carpMonitoring/scripts_cmd/
+  3.arduino code for the conveyor belt is in the arduino folder under the home directitory 
+  4.arduino code to run the propellor and rudder are located in rsn/umn-ros-pkg/rsn/carpMonitoring/ 
+  
+important programs 
+  located in the node folder is:
+    1.lavant_bridge_timer - run before you launch other code 
+    2.TargetTracking - main code for ping pong ball project 
+    3. boat_cmds -contains functions nessisary to run the boat 
+    4. Vision.py -gives position and distance to the orange pingpong ball 
+  
 
 OpenCV download
 https://pypi.python.org/pypi/opencv-python
