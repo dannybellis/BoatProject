@@ -4,6 +4,7 @@
 import rospy
 import sys
 import time
+import math
 
 from gps_common.msg import GPSFix
 from gps_common.msg import GPSStatus
