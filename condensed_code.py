@@ -85,6 +85,7 @@ class boatFunctions:
 	self.target_lat = target_lat
 	self.target_lon = target_lon
 	self.target_angle = 0
+	self.distance = 0
 	
 	self.rate.sleep()
 
@@ -156,7 +157,19 @@ class boatFunctions:
 	target_heading = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), (math.cos(lat1)*math.sin(lat2))-(math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1)))
 	self.target_angle = math.degrees(target_heading)
 	self.rate.sleep()	
-
+	
+    def Distance(lat1, lon1, lat2, lon2):
+        self.compass_msg()
+	self.gps_msg()
+	lat1 = radians(self.lat)
+	lon1 = radians(self.lon)
+	lat2 = radians(self.target_lat)
+	lon2 = radians(self.target_lon)
+        a = (math.sin((lat2-lat1)/2)**2)+math.cos(lat1)*math.cos(lat2)*(math.sin((lon2-lon1)/2)**2)
+        c = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))
+        distance = c*(6371e3)*3.28048
+	self.distance = distance
+        self.rate.sleep()
 
 
 
