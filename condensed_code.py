@@ -69,11 +69,19 @@ class boatFunctions:
         #GPS
         self.GPS_FIX_SUB_TOPIC = "fix"
         self.gps = rospy.Subscriber(self.GPS_FIX_SUB_TOPIC, NavSatFix, self.gps_msg)
+	self.lat = 0
+	self.lon = 0
         
         #Compass
         self.COMPASS_SUB_TOPIC = "sensors/compass"
         self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
-        
+	self.heading = 0
+	
+	#Targeting
+	self.target_lat = target_lat
+	self.target_lon = target_lon
+	self.target_angle = 0
+	
 	self.rate.sleep()
 
     def set_angle(self, angle, comment=0):
@@ -124,13 +132,26 @@ class boatFunctions:
            print("latitude :", msg.latitude)
            print("longitude :", msg.longitude)
            print("error covariance :", msg.position_covariance)
+	   self.lat = msg.latitude
+	   self.lon = msg.longitude
            self.rate.sleep()
         
     def compass_msg(self, msg):
 	if self.extra_comment == 1:
            print("heading: ", msg.data)
+	   self.heading = msg.data
            self.rate.sleep()
-
+	
+    def target_heading_direction(self)
+	self.compass_msg()
+	self.gps_msg()
+	lat1 = radians(self.lat)
+	lon1 = radians(self.lon)
+	lat2 = radians(self.target_lat)
+	lon2 = radians(self.target_lon)
+	target_heading = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), (math.cos(lat1)*math.sin(lat2))-(math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1)))
+	self.target_angle = math.degrees(target_heading)
+	self.rate.sleep()	
 
 
 
