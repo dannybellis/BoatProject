@@ -63,10 +63,10 @@ class boatFunctions:
 	
         
         #Conveyor
-		self.LOWER_PUB_TOPIC = "motor_cmd/conveyor_lower" 
-		self.CONVEYOR_ON_PUB_TOPIC = "motor_cmd/conveyor_on"
-		self.pub_conveyor_lower = rospy.Publisher(self.LOWER_PUB_TOPIC,Bool,queue_size = 1) 
-		self.pub_conveyor_on = rospy.Publisher(self.CONVEYOR_ON_PUB_TOPIC,Bool,queue_size = 1)
+	self.LOWER_PUB_TOPIC = "motor_cmd/conveyor_lower" 
+	self.CONVEYOR_ON_PUB_TOPIC = "motor_cmd/conveyor_on"
+	self.pub_conveyor_lower = rospy.Publisher(self.LOWER_PUB_TOPIC,Bool,queue_size = 1) 
+	self.pub_conveyor_on = rospy.Publisher(self.CONVEYOR_ON_PUB_TOPIC,Bool,queue_size = 1)
         self.conveyor_on = False
         self.conveyor_lowered = False
         
@@ -123,13 +123,13 @@ class boatFunctions:
             
         if isinstance(lowered, bool): 
             self.coneveyor_lowered = lowered
-			self.pub_conveyor_lowered.publish(on)
+	    self.pub_conveyor_lowered.publish(on)
         else: 
             print("Error: cannot understand lowered variable please enter a bool")
             
         if comment == 1: 
             print("{}: The Conveyor is {} and {}" .format(time.time(), on, lowered))
-        self.rate.sleep()
+            self.rate.sleep()
 
     def gps_msg(self, msg):
 	if self.extra_comment == 1:
