@@ -5,6 +5,7 @@
 import rospy
 import sys
 import time
+import math
 
 from gps_common.msg import GPSFix
 from gps_common.msg import GPSStatus
@@ -16,7 +17,7 @@ from std_msgs.msg import Int8
 
 class boatFunctions:
     
-    def __init__(self, min_angle, max_angle, min_throttle, max_throttle):
+    def __init__(self, min_angle, max_angle, min_throttle, max_throttle, target_lat, target_lon):
 
         rospy.init_node('boat_cmds', anonymous=True)
         self.rate = rospy.Rate(1) # 10hz
@@ -34,8 +35,7 @@ class boatFunctions:
         self.max_throttle = max_throttle
         self.min_throttle = min_throttle
         self.throttle_on = False
-        self.throttle = 0
-	
+        self.throttle = 0	
         
         #Conveyor
         self.conveyor_on = False
@@ -44,10 +44,17 @@ class boatFunctions:
         #GPS
         self.GPS_FIX_SUB_TOPIC = "fix"
         self.gps = rospy.Subscriber(self.GPS_FIX_SUB_TOPIC, NavSatFix, self.gps_msg)
+	self.lat = 0
+	self.lon = 0
         
         #Compass
         self.COMPASS_SUB_TOPIC = "sensors/compass"
         self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
+	
+	#Target heading
+	self.target_lat = target_lat
+	self.target_lon = tatget_lon
+	self.target_heading = 0
         
 	self.rate.sleep()
 
@@ -96,11 +103,22 @@ class boatFunctions:
         print("latitude :", msg.latitude)
         print("longitude :", msg.longitude)
         print("error covariance :", msg.position_covariance)
+	self.lat = msg.latitude
+	self.lon = msg.longitude
         self.rate.sleep()
         
     def compass_msg(self, msg):
         print("heading: ", msg.data)
         self.rate.sleep()
+
+    def target_heading_direction(self, msg)
+	lat1 = radians(self.lat)
+	lon1 = radians(self.lon)
+	lat2 = radians(self.target_lat)
+	lon2 = radians(self.target_lon)
+	target_heading = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), (math.cos(lat1)*math.sin(lat2))-(math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1)))
+	self.target_heading = math.degrees(target_heading)
+	self.rate.sleep()	
 
 boat = boatFunctions(-40,40,-120,120)
 boat.set_angle(0,1)
