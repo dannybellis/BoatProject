@@ -1,0 +1,232 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import rospy
+import sys
+import time
+import math
+import numpy as np
+
+from gps_common.msg import GPSFix
+from gps_common.msg import GPSStatus
+
+from sensor_msgs.msg import NavSatFix
+
+from std_msgs.msg import Float32
+from std_msgs.msg import Int8
+from std_msgs.msg import Bool
+
+import cv2
+from cv_bridge import *
+        
+class makeBoat:
+    def __init__(self, min_angle, max_angle, min_throttle, max_throttle, target_lat, target_lon, vision_dist, smoothing_factor):
+        
+        rospy.init_node('boat_cmds', anonymous=True)
+        self.rate = rospy.Rate(1)
+        
+        #Rudder
+        self.min_angle = min_angle
+        self.max_angle = max_angle
+        self.angle = 0
+        self.RUDDER_PUB_TOPIC = "motor_cmd/steer"
+        self.pub_rudder = rospy.Publisher(self.RUDDER_PUB_TOPIC, Int8, queue_size=1)
+        
+        #Throttle
+        self.min_throttle = min_throttle
+        self.max_throttle = max_throttle
+        self.throttle = 0
+        self.throttle_on = False
+        self.PROP_PUB_TOPIC = "motor_cmd/propeller"
+        self.pub_prop = rospy.Publisher(self.PROP_PUB_TOPIC, Int8, queue_size=1)
+        
+        #GPS
+        self.lat = 0
+        self.lon = 0
+        self.GPS_FIX_SUB_TOPIC = "fix"
+        self.gps = rospy.Subscriber(self.GPS_FIX_SUB_TOPIC, NavSatFix, self.gps_msg)
+        
+        #Compass
+        self.heading = 0
+        self.COMPASS_SUB_TOPIC = "sensors/compass"
+        self.compass = rospy.Subscriber(self.COMPASS_SUB_TOPIC, Float32, self.compass_msg)
+        
+        #Targeting
+        self.target_lon = target_lon
+        self.target_lat = target_lat
+        self.target_heading = 0
+        self.target_distance = 0
+        
+        #Conveyor
+        self.conveyor_on = False
+        self.conveyor_down = False
+        self.LOWER_PUB_TOPIC = "motor_cmd/conveyor_lower"
+        self.CONVEYOR_ON_PUB_TOPIC = "motor_cmd/conveyor_on"
+        self.pub_conveyor_lower = rospy.Publisher(self.LOWER_PUB_TOPIC,Bool,queue_size = 1) 
+        self.pub_conveyor_on = rospy.Publisher(self.CONVEYOR_ON_PUB_TOPIC,Bool,queue_size = 1)
+        
+        #Vision
+        self.vision_dist = vision_dist
+        self.smoothing_factor = smoothing_factor
+        self.ball_distance = 0
+        self.ball_angle = 0
+        self.ball_seen = False
+        
+        #Vision
+        self.h_lower = 0
+        self.s_lower = 73
+        self.v_lower = 140
+        self.h_upper = 36 
+        self.s_upper = 255
+        self.v_upper = 255
+        self.blur_amount = 7
+        self.erode_1_amount = 3
+        self.bin_thresh_amount = 4
+        self.erode_2_amount = 5
+        
+        self.rate.sleep()
+        
+        def turn_angle(self, angle, comment=False):
+            if angle <= self.min_angle:
+                self.angle = self.min_angle
+            if angle >= self.max_angle:
+                self.angle = self.max_angle
+            self.pub_rudder.publish(self.angle)
+            if comment == True:
+                print("{}: Setting angle to {}" .format(time.time(), self.angle))
+            self.rate.sleep()
+            
+        def set_throttle(self, throttle, comment=False):
+            if throttle <= self.min_throttle:
+                self.throttle = self.min_throttle
+                self.throttle_on = True
+            if throttle >= self.max_throttle:
+                self.throttle = self.max_throttle
+                self.throttle_on = True
+            if throttle == 0:
+                self.throttle_on = False
+            self.pub_prop.publish(self.throttle)
+            if comment == 1:
+                print("{}: Setting throttle to {}" .format(time.time(), self.throttle))
+            self.rate.sleep()
+            
+        def gps_msg(self, msg, comment=False):
+            self.lat = msg.latitude
+            self.lon = msg.longitude
+            lat1 = math.radians(self.lat)
+            lon1 = math.radians(self.lon)
+            lat2 = math.radians(self.target_lat)
+            lon2 = math.radians(self.target_lon)
+            a = (math.sin((lat2-lat1)/2)**2)+math.cos(lat1)*math.cos(lat2)*(math.sin((lon2-lon1)/2)**2)
+            distance = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))*(6371e3)
+            self.target_distance = distance
+            targ_heading = math.degrees(heading = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), (math.cos(lat1)*math.sin(lat2))-(math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1))))
+            self.target_heading = targ_heading
+            if comment == True:
+                print("Latitude: ", self.lat)
+                print("Longitude: ", self.lon)
+                print("Error Covariance :", msg.position_covariance)
+                print("Target Heading:, ", self.target_heading)
+                print("Target Distance:, ", self.target_distance)
+            self.rate.sleep()
+            
+        def compass_msg(self, msg, comment=False):
+            self.heading = msg.heading
+            if comment == True:
+                print("Heading: ", self.heading)
+            self.rate.sleep()
+            
+        def conveyor(self, on=False, lowered=False, comment=False):
+            if lowered == True:
+                self.pub_conveyor_lowered.publish(lowered)
+                self.conveyor_lowered = True
+            if on == True:
+                self.pub_conveyor_on.publish(on)
+                self.conveyor_on = True
+            if comment == True:
+                print("Lowered: ", self.conveyor_lowered)
+                print("On: ", self.conveyor_on)
+            self.rate.sleep()
+            
+        def vision(self, comment=False, picture=False):
+            cap = cv2.VideoCapture(0)
+            dists = []
+            angles = []
+            while(True):
+                ret, frame = cap.read()
+                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                hsv_thresh = cv2.inRange(hsv, (self.h_lower, self.s_lower, self.v_lower), (self.h_upper, self.s_upper, self.v_upper))
+                erode_1 = cv2.erode(hsv_thresh, None, (-1, -1), iterations = self.erode_1_amount, borderType = cv2.BORDER_CONSTANT, borderValue = (-1))
+                blur = cv2.GaussianBlur(erode_1, ((6*self.blur_amount)+1, (6*self.blur_amount)+1), self.blur_amount)
+                bin_thresh = cv2.threshold(blur, self.bin_thresh_amount, 255, cv2.THRESH_BINARY)[1]
+                erode_2 = cv2.erode(bin_thresh, None, (-1, -1), iterations = self.erode_2_amount, borderType = cv2.BORDER_CONSTANT, borderValue = (-1))
+                im, contours, h = cv2.findContours(erode_2.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+                if len(contours) == 0:
+                    self.ball_seen = False
+                else:
+                    self.ball_seen = True
+                for contour in contours:       
+                    (x, y), r = cv2.minEnclosingCircle(contour)
+                    dist = 1665/(2*r)
+                    dists.append(dist)
+                    dist_smoothed = np.cumsum(dists[-self.smoothing_factor:])[-1]/len(dists[-self.smoothing_factor:])
+                    angles.append((x-320)*0.053)
+                    angles_smoothed = np.cumsum(angles[-self.smoothing_factor:])[-1]/len(angles[-self.smoothing_factor:])
+                    self.ball_angle = angles_smoothed
+                    self.ball_distance = dist_smoothed/100
+                    if comment == True:
+                        print(self.ball_distance)
+                        print(self.ball_angle)
+                    dists = dists[-self.smoothing_factor:]
+                    angles = angles[-self.smoothing_factor:]
+                    cv2.drawContours(frame, contours, -1, color=(0, 255, 0), thickness=2)
+                if picture == True:
+                    cv2.imshow('frame', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            cap.release()
+            cv2.destroyAllWindows()
+            self.rate.sleep()
+                
+constant = 20
+        
+boat = makeBoat(-30, 30, -120, 120, 0, 0, 1, 5)
+boat.compass_msg(comment=False)
+boat.gps_msg(comment=False)
+while boat.vision_distance < boat.target_distance:
+    boat.compass_msg(comment=False)
+    boat.gps_msg(comment=False)
+    angle_error = boat.heading-boat.target_heading
+    while angle_error > 1:
+        boat.set_angle(angle_error)
+        boat.set_throttle(75)
+        angle_error = boat.heading-boat.target_heading
+
+boat.vision()
+while True:
+    boat.set_angle(-20)
+    boat.set_throttle(40)
+    if boat.ball_seen == True:
+        while boat.ball_seen == True:
+            boat.conveyor(on=True, lowered=True)
+            boat.set_angle(boat.ball_angle)
+            boat.set_throttle(boat.ball_distance*constant)
+
+        
+
+        
+    
+
+    
+                
+            
+            
+            
+            
+        
+            
+        
+        
+        
+        
+        
