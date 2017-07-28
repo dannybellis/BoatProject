@@ -54,3 +54,11 @@ steps:
  7. Go to directory rsh/umn-ros-pkg/rsn/carpMonitoring/scripts_cmd/
  8. To steer do "rostopic pub -r 10 /motor_cmd/steer std_msgs/Int8 Your_Angle" (Make sure you dont go over 30 or under -30 deg)
     To move do "rostopic pub -r 10 /motor_cmd/propeller std_msgs/Int Your_Speed"
+    
+    
+Setup arduino 
+  1.make sure arduino is connected to vm (use this site to get the serial port setup http://joequery.me/guides/arduino-ubuntu-virtualbox-windows-host/) 
+  2. open arduino ide and upload your code 
+  3. type roscore& into terminal 
+  4. in a new tab enter this into the command line rosrun rosserial_python serial_node.py /dev/ttyACM0 -- make sure this last part is where your arduino is plugges in 
+
